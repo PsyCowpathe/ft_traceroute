@@ -25,7 +25,7 @@ char	*parse_flag_identifier(char *to_parse)
 		i++;
 	}
 	if (count >= 3)
-		error_exit(1, true, UNRECOGNIZED, to_parse);
+		error_exit(1, true, UNRECOGNIZED, to_parse, to_parse);
 	return (to_parse + i);
 }
 
@@ -34,7 +34,7 @@ int	get_neg_index(char *flag_value, int *current_index)
 	int	i;
 
 	i = 0;
-	while (isspace(flag_value[i]))
+	while (flag_value[i] && isspace(flag_value[i]))
 		i++;
 	*current_index = i;
 	if (flag_value[i] == '-')
@@ -48,6 +48,7 @@ int	check_is_float(char *flag_value)
 	int	neg_i;
 	int	dot_i;
 
+	i = 0;
 	neg_i = get_neg_index(flag_value, &i);
 	dot_i = -1;
 	if (flag_value[i] == '\0')
@@ -76,6 +77,7 @@ int	check_is_int(char *flag_value)
 	int	i;
 	int	neg_index;
 
+	i = 0;
 	neg_index = get_neg_index(flag_value, &i);
 	if (flag_value[i] == '\0')
 		return (-1);
@@ -114,27 +116,12 @@ int	verify_flag_value(char *flag_id, char *flag_value)
 
 int	verify_flag_limits(t_parameters *params)
 {
-	(void)params;
-	printf("todo : implementer la vérification des limits des flags");
-	/*if (params->time_to_live == 0)
-		error_exit(1, false, TOO_SMALL, params->string_time_to_live);
-	else if (params->time_to_live > TTL_MAX || params->time_to_live < TTL_MIN)
-		error_exit(1, false, TOO_BIG, params->string_time_to_live);
-	if (params->timeout == 0)
-		error_exit(1, false, TOO_SMALL, params->string_timeout);
-	else if (params->timeout < 0)
-		error_exit(1, false, TOO_BIG, params->string_timeout);
-	if (params->interval < 0.2)
-	{
-		if (getuid() != 0)
-			error_exit(1, false, TOO_SMALL, params->string_interval);
-	}
-	if (params->paquet_size > PACKET_MAX_SIZE || params->paquet_size < 0)
-		error_exit(1, false, TOO_BIG, params->string_paquet_size);
-	if (params->interval < 0)
-		error_exit(1, false, BAD_TIMING_INTERVAL, params->string_interval);
-	if (params->count == 0)
-		params->count = UINT32_MAX;*/
+	if (params->ttl_max > MAX_HOPS)
+		error_exit(1, false, HOPS_TOO_BIG);
+	if (params->hop_start > MAX_HOPS)
+		error_exit(1, false, HOPS_OUT_RANGE);
+	if (params->probes_per_hop > MAX_PROBES)
+		error_exit(1, false, TOO_MUCH_PROBES);
 	return (0);
 }
 
@@ -165,16 +152,22 @@ int	parse_flag(t_parameters *params, char **args, int argc, int index)
 		return (1);
 	}
 	index++;
+	if (verify_flag_identifier(flag_id) == -1)
+		error_exit(1, true, INVALID_OPTION, flag_id);
 	if (index == argc)
 		error_exit(1, true, MISSING_VALUE, flag_id);
 	flag_value = args[index];
-	if (verify_flag_identifier(flag_id) == -1)
-		error_exit(1, true, INVALID_OPTION, flag_id);
 	if (verify_flag_value(flag_id, flag_value) == -1)
 		error_exit(1, true, INVALID_VALUE, flag_id, flag_value);
 	store_flag(params, flag_id, flag_value);
 	verify_flag_limits(params);
 	return (0);
+}
+
+void verify_packet_len(t_parameters *params)
+{
+	if (check_is_int(params->string_packet_len) == -1)
+		error_exit(1, true, INVALID_PACKETLEN, params->string_packet_len);
 }
 
 int	parse_args(char **args, int argc, t_parameters *params)
@@ -196,6 +189,12 @@ int	parse_args(char **args, int argc, t_parameters *params)
 		else if (params->string_original_target == NULL)
 		{
 			params->string_original_target = args[i];
+		}
+		else if (params->string_packet_len == NULL)
+		{
+			params->string_packet_len = args[i];
+			verify_packet_len(params);
+			printf("packet len = %s", args[i]);
 		}
 		i++;
 	}

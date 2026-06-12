@@ -23,7 +23,7 @@ void	dns_lookup(t_parameters *params)
 	hints.ai_socktype = SOCK_RAW;
 	hints.ai_protocol = IPPROTO_ICMP;
 	if (getaddrinfo(params->string_original_target, NULL, &hints, &result) != 0)
-		error_exit(1, false, UNKNOW_HOST);
+		error_exit(1, false, UNKNOW_HOST, params->string_original_target, params->string_original_target);
 	params->ip_address = (struct addrinfo *)result;
     snprintf(
     params->string_ip_address,
@@ -54,6 +54,7 @@ void	verify_target_address(t_parameters *params)
 	if (params->string_original_target == NULL)
 		error_exit(1, true, MISSING_HOST);
 	dns_lookup(params);
+	printf("ip address = %s", params->string_ip_address);
 	ft_strncpy(params->dns_name, params->string_original_target, NI_MAXHOST);
 	if (params->rdns == true)
 		reverse_dns_lookup(params);

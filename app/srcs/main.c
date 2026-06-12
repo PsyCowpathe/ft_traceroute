@@ -31,5 +31,4 @@ int     main(int argc, char **argv)
         print_help_menu();
 	}
 	return (0);
-
 }
