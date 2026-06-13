@@ -1,8 +1,8 @@
 #!/bin/bash
 
-#========== Tests List ==========
+#========== Tests Lists ==========
 
-declare -a testList=(
+declare -a errorTestList=(
     "-m"
     "--g"
     "--m"
@@ -20,6 +20,16 @@ declare -a testList=(
     "-f -1 8.8.8.8"
     "-q -1 8.8.8.8"
     "-q 255 8.8.8.8"
+    "8.8.8.8 -1"
+    "8.8.8.8 60.1"
+    "-f 31 8.8.8.8"
+)
+
+declare -a successTestList=(
+    "8.8.8.8"
+    "8.8.8.8 60"
+    "-f 5 8.8.8.8"
+    "-f 25 8.8.8.8"
 )
 
 
@@ -68,6 +78,9 @@ declare -a expected=(
     "ft_traceroute: first hop out of range"
     "ft_traceroute: no more than 10 probes per hop"
     "ft_traceroute: no more than 10 probes per hop"
+    "ft_traceroute: Bad option \`-1'\nTry 'ft_traceroute --help' for more information."
+    "ft_traceroute: Cannot handle \"packetlen\" cmdline arg \`60.1'\nTry 'ft_traceroute --help' for more information."
+    "ft_traceroute: first hop out of range"
 )
 
 totalTests=0
@@ -119,25 +132,6 @@ exec_with_empty_args() {
     echo "=================================================="
 }
 
-run_unit_tests() {
-
-    exec_with_no_args
-    exec_with_empty_args
-
-    expectedIndex=0
-
-    for i in "${testList[@]}"
-    do
-        echo -e "=================== Test $expectedIndex =======================\n"
-        your=$(./ft_traceroute $i 2>&1)
-        check_outputs "$your" "${expected[$expectedIndex]}" "$i"
-        expectedIndex=$((expectedIndex+1))
-        echo "=================================================="
-
-    done
-
-}
-
 display_final_result() {
 
     if [ "$totalErrors" -eq "0" ]; then
@@ -148,6 +142,69 @@ display_final_result() {
     #if totalErrors
 }
 
-#compil
-run_unit_tests
-display_final_result
+run_error_tests() {
+
+    exec_with_no_args
+    exec_with_empty_args
+
+    testCount=0
+
+    for i in "${errorTestList[@]}"
+    do
+        echo -e "================ Error Test $testCount ===================\n"
+        your=$(./ft_traceroute $i 2>&1)
+        check_outputs "$your" "${expected[$testCount]}" "$i"
+        testCount=$((testCount+1))
+        echo "=================================================="
+
+    done
+
+}
+
+clean_output(){
+
+    result=$1
+
+    ip="[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}"
+    ipReplace="XXX.XXX.XXX.XXX"
+
+    ms="[0-9]{1,3}.[0-9]{1,3} ms"
+    msReplace="t.ttt ms"
+    
+    #Replace ip by "XXX.XXX.XXX.XXX"
+    #result=$(echo "$result" | sed -E "s/$ip/$ipReplace/g")
+
+    #Replace ms by "t.ttt ms"
+    result=$(echo "$result" | sed -E "s/$ms/$msReplace/g")
+    
+    echo $result
+}
+
+run_success_tests() {
+
+    testCount=0
+
+    for i in "${successTestList[@]}"
+    do
+        echo -e "================ Success Test $testCount ===================\n"
+
+        your=$(./ft_traceroute $i 2>&1)
+        linux=$(traceroute $i 2>&1)
+        
+        cleanedYour=$(clean_output "$your")
+        cleanedLinux=$(clean_output "$linux")
+        check_outputs "$cleanedYour" "$cleanedLinux" "$i"
+        testCount=$((testCount+1))
+        echo "=================================================="
+
+    done
+}
+
+run() {
+
+    run_error_tests
+    run_success_tests
+    display_final_result
+}
+
+run
