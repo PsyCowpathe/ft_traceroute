@@ -22,11 +22,16 @@
 # include <stddef.h>
 # include <netdb.h>
 # include <arpa/inet.h>
+# include <sys/socket.h>
+
+# define PORT 33434
 
 /****************** LIMITS ******************/
 
 # define MAX_HOPS 255
 # define MAX_PROBES 10
+# define MAX_PACKET_SIZE 65000
+# define DEFAULT_PACKET_SIZE 60
 
 
 /****************** ERRORS ******************/
@@ -51,6 +56,10 @@ Cannot handle \"host\" cmdline arg `%s'"
 typedef struct s_parameters
 {
     char				dns_name[NI_MAXHOST];
+	struct sockaddr_in	destination;
+	uint16_t			current_ttl;
+	int					socket_fd;
+	char				packet[MAX_PACKET_SIZE];
 
     /******************  ARGUMENTS   ******************/
 

@@ -45,4 +45,5 @@ void	init_flag_structure(t_parameters *params)
 	params->rdns = false;
 	params->probe_interval = 0;
 	params->dns_name[0] = '\0';
+	params->packet_len = DEFAULT_PACKET_SIZE;
 }

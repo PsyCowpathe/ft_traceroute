@@ -194,7 +194,7 @@ int	parse_args(char **args, int argc, t_parameters *params)
 		{
 			params->string_packet_len = args[i];
 			verify_packet_len(params);
-			printf("packet len = %s", args[i]);
+			params->packet_len = atoi(params->string_packet_len);
 		}
 		i++;
 	}
