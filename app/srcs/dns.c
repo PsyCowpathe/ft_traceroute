@@ -17,13 +17,15 @@ void	dns_lookup(t_parameters *params)
 {
 	struct addrinfo	hints;
 	struct addrinfo	*result;
+	int				ret;
 
 	ft_bzero(&hints, sizeof(hints));
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_RAW;
 	hints.ai_protocol = IPPROTO_ICMP;
-	if (getaddrinfo(params->string_original_target, NULL, &hints, &result) != 0)
-		error_exit(1, false, UNKNOW_HOST, params->string_original_target, params->string_original_target);
+	ret = getaddrinfo(params->string_original_target, NULL, &hints, &result);
+	if (ret != 0)
+		error_exit(1, false, UNKNOW_HOST, params->string_original_target, gai_strerror(ret), params->string_original_target); //TODO : TESTER
 	params->ip_address = (struct addrinfo *)result;
     snprintf(
     params->string_ip_address,
@@ -45,8 +47,11 @@ void	reverse_dns_lookup(t_parameters *params)
 	ret = getnameinfo((struct sockaddr *)&tmp_addr, len,
 			params->dns_name, sizeof(params->dns_name), NULL, 0,
 			NI_NAMEREQD);
-	if (ret != 0)
+	if (ret == 0)
 		ft_strncpy(params->dns_name, params->string_ip_address, NI_MAXHOST);
+	else
+		error_exit(1, false, gai_strerror(ret)); //TODO : TESTER
+
 }
 
 void	verify_target_address(t_parameters *params)
@@ -54,7 +59,6 @@ void	verify_target_address(t_parameters *params)
 	if (params->string_original_target == NULL)
 		error_exit(1, true, MISSING_HOST);
 	dns_lookup(params);
-	printf("ip address = %s", params->string_ip_address);
 	ft_strncpy(params->dns_name, params->string_original_target, NI_MAXHOST);
 	if (params->rdns == true)
 		reverse_dns_lookup(params);

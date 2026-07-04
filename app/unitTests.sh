@@ -57,7 +57,7 @@ packetlen		The full packet length (default is the length of an IP
 			header plus 40). Can be ignored or increased to a minimal
 			allowed value"
 
-expectedEmpty="ft_traceroute: : Temporary failure in name resolution
+expectedEmpty="ft_traceroute: : No address associated with hostname
 Cannot handle \"host\" cmdline arg \`'"
 
 declare -a expected=(

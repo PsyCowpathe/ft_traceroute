@@ -53,28 +53,37 @@
 			sizeof(struct icmphdr) + (params->paquet_size));
 }*/
 
-int		set_udp_sockopt(int socket_fd)
+int		set_sockopt(int socket_fd)
 {
 	struct timeval	timeout = {5, 0};
 	if (setsockopt(socket_fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0)
 	{
-		error_exit(1, false, "Sockopt failure for UDP socket !\n");
+		error_exit(1, false, "Sockopt failure !\n");
 		exit(1);
 	}
 	return socket_fd;
 }
 
-int		create_socket(t_parameters *params)
+int		create_socket(char *socket_type)
 {
-	
-	params->socket_fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-	if (params->socket_fd < 0)
+	int socketmp;
+
+	if (ft_strcmp(socket_type, "UDP") == 0)
 	{
-		perror("Can't create socket ! ");
+		socketmp = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	}
+	else
+	{
+		socketmp = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+	}
+	if (socketmp < 0)
+	{
+		printf("socket type = %s", socket_type);
+		perror(SOCKET_CREATION_ERROR);
 		exit(1);
 	}
-	params->socket_fd = set_udp_sockopt(params->socket_fd);
-	return params->socket_fd;
+	socketmp = set_sockopt(socketmp);
+	return socketmp;
 }
 
 void	create_packet(t_parameters *params)
@@ -82,7 +91,7 @@ void	create_packet(t_parameters *params)
 	int		i = 0;
 
 	params->destination = *(struct sockaddr_in *)params->ip_address->ai_addr;
-	params->destination.sin_port = htons(PORT);
+	params->destination.sin_port = htons(PORT); //todo : handle port increment
 	params->current_ttl = 1;
 	while (i < params->packet_len)
 	{
@@ -93,7 +102,7 @@ void	create_packet(t_parameters *params)
 
 void	update_socket(t_parameters *params)
 {
-	if (setsockopt(params->socket_fd, IPPROTO_IP, IP_TTL, &params->current_ttl, sizeof(params->current_ttl)))
+	if (setsockopt(params->udp_socket, IPPROTO_IP, IP_TTL, &params->current_ttl, sizeof(params->current_ttl)))
 		error_exit(1, false, "Sockopt failure for TTL !\n");
 }
 
@@ -101,15 +110,53 @@ void	send_probe(t_parameters *params)
 {
 	int	sent_bytes;
 	
-	sent_bytes = sendto(params->socket_fd, &params->packet,params->packet_len, 0,
+	sent_bytes = sendto(params->udp_socket, &params->packet,params->packet_len, 0,
 		(struct sockaddr *)&params->destination, sizeof(params->destination));
 	if (sent_bytes < 0)
 	{
-		perror("Could not send packet ! ");
+		perror("Could not send packet ! "); // TODO : interdit
+	}
+	//fill start
+	gettimeofday(&params->start, 0);
+}
+
+void	print_one_step(t_parameters *params, struct sockaddr *answerer)
+{
+	char		ip_result[NI_MAXHOST];
+	long double	rtt = (params->end.tv_sec - params->start.tv_sec) * 1000000.0 + params->end.tv_usec - params->start.tv_usec;
+        rtt /= 1000;
+
+	snprintf(
+    	ip_result,
+    	INET_ADDRSTRLEN,
+    	"%s",
+    	inet_ntoa(((struct sockaddr_in *)answerer)->sin_addr));
+	printf(PRINT_STEP, params->current_ttl, ip_result, rtt);
+
+	if (ft_strcmp(ip_result, params->string_ip_address) == 0)
+		params->destination_reached = true;
+}
+
+void	interpret_response(t_parameters *params, struct sockaddr *answerer, char *buffer)
+{
+	struct icmphdr		*receive_header;
+	struct ip			*ip_header;
+
+	ip_header = (struct ip *)buffer;
+	receive_header = (struct icmphdr *)((char *)buffer
+		+ (ip_header->ip_hl * 4));
+	
+	if (receive_header->type == 11)
+	{
+		print_one_step(params, answerer);
+	}
+	else if (receive_header->type == 3)
+	{
+		printf(HOST_UNREACHABLE);
 	}
 	else
 	{
-		printf("Probe sent !");
+		printf("answer header type = %d", receive_header->type); //todo : handle
 	}
 }
 
@@ -120,35 +167,62 @@ void	receive_response(t_parameters *params)
 	struct		sockaddr_in	answerer;
 	socklen_t	answerer_size = sizeof(answerer);
 
-	received_bytes = recvfrom(params->socket_fd, &buffer, sizeof(buffer), 0,
+	printf("waiting");
+	fflush(stdout);
+	received_bytes = recvfrom(params->icmp_socket, &buffer, sizeof(buffer), 0,
 						(struct sockaddr *)&answerer, &answerer_size);
+	gettimeofday(&params->end, 0);
+
+
 	if (received_bytes > 0)
 	{
-		printf("Answer received");
+		interpret_response(params, (struct sockaddr *)&answerer, buffer);
 	}
 	else if (received_bytes == 0)
 	{
-		printf("no response received");
+		printf("no response received\n"); //todo : handle
 	}
 	else
 	{
-		printf("error while receiving !");
+		printf("error while receiving !\n");
+		printf("%s\n", strerror(errno));
 	}
+}
+
+static double    get_time_seconds(void)
+{
+    struct    timeval    t;
+
+    gettimeofday(&t, 0);
+    return (t.tv_sec + t.tv_usec / 1e9);
 }
 
 void	ft_traceroute(t_parameters *params)
 {
-	int		current_index = 0;
+	uint32_t	probes_count;
+	double		current_time = 0.0;
+	double		last_time = 0.0;
 
-	create_socket(params);
+	params->udp_socket = create_socket("UDP");
+	params->icmp_socket = create_socket("ICMP");
 	create_packet(params);
 
-	while (current_index < 10)
+	while (params->destination_reached == false && params->current_ttl <= params->ttl_max)
 	{
+		probes_count = 0;
 		update_socket(params);
-		send_probe(params);
-		receive_response(params);
-		current_index++;
+		while (probes_count < params->probes_per_hop)
+		{
+			current_time = get_time_seconds();
+			if (current_time - last_time > params->probe_interval || last_time == 0.0)
+			{
+				last_time = current_time;
+				send_probe(params);
+				receive_response(params);
+				probes_count++;
+			}
+		}
+		params->current_ttl++;
 	}
 }
 

@@ -23,14 +23,18 @@
 # include <netdb.h>
 # include <arpa/inet.h>
 # include <sys/socket.h>
+# include <string.h>
+# include <errno.h> //todo : delete
+# include <sys/time.h>
 
 # define PORT 33434
+
 
 /****************** LIMITS ******************/
 
 # define MAX_HOPS 255
 # define MAX_PROBES 10
-# define MAX_PACKET_SIZE 65000
+# define MAX_PACKET_SIZE 65535
 # define DEFAULT_PACKET_SIZE 60
 
 
@@ -39,7 +43,7 @@
 # define ERROR_PRINT_TRY "ft_traceroute: %s\n\
 Try \'ft_traceroute --help\' for more information.\n"
 # define ERROR_PRINT "ft_traceroute: %s\n"
-# define UNKNOW_HOST "%s: Temporary failure in name resolution\n\
+# define UNKNOW_HOST "%s: %s\n\
 Cannot handle \"host\" cmdline arg `%s'"
 # define MISSING_HOST "Specify \"host\" missing argument."
 # define MISSING_VALUE "Option `-%s' requires an argument."
@@ -51,6 +55,13 @@ Cannot handle \"host\" cmdline arg `%s'"
 # define HOPS_TOO_BIG "max hops cannot be more than 255"
 # define HOPS_OUT_RANGE "first hop out of range"
 # define TOO_MUCH_PROBES "no more than 10 probes per hop"
+# define SOCKET_CREATION_ERROR "Can't create socket ! Internal error "
+# define HOST_UNREACHABLE "Destination Host Unreachable\n"
+
+
+/****************** SUCCESS ******************/
+
+# define PRINT_STEP "%d %s %LF ms TIME TIME\n"
 
 
 typedef struct s_parameters
@@ -58,8 +69,12 @@ typedef struct s_parameters
     char				dns_name[NI_MAXHOST];
 	struct sockaddr_in	destination;
 	uint16_t			current_ttl;
-	int					socket_fd;
+	bool				destination_reached;
+	int					udp_socket;
+	int					icmp_socket;
 	char				packet[MAX_PACKET_SIZE];
+	struct timeval		start;
+	struct timeval		end;
 
     /******************  ARGUMENTS   ******************/
 
@@ -94,7 +109,7 @@ typedef struct s_parameters
     // If the value is more than 10, then it specifies a
     // number in milliseconds, else it is a number of
     // seconds (float point values allowed too)
-	float				probe_interval;
+	double				probe_interval;
 	char				*string_probe_interval;
 }						t_parameters;
 

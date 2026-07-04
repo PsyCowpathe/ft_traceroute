@@ -1,0 +1,8 @@
+services:
+    ping:
+        build: .
+        volumes:
+          - ./app:/home/app
+        working_dir: /home/app
+        stdin_open: true
+        tty: true

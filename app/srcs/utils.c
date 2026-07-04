@@ -31,7 +31,7 @@ void	store_flag(t_parameters *params, char *flag_id, char *flag_value)
     }
     else if (ft_strcmp(flag_id, "z") == 0)
     {
-    	params->probe_interval = atof(flag_value);
+    	params->probe_interval = atof(flag_value); //todo : handle more than 10 (look the man)
     	params->string_probe_interval = flag_value;
     }
 }
@@ -46,4 +46,5 @@ void	init_flag_structure(t_parameters *params)
 	params->probe_interval = 0;
 	params->dns_name[0] = '\0';
 	params->packet_len = DEFAULT_PACKET_SIZE;
+	params->destination_reached = false;
 }
