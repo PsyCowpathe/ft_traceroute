@@ -19,7 +19,26 @@ A clone of traceroute written in C.
 A unitTests.sh script is available to automatically compare the output with the official traceroute:
     sudo ./unitTests.sh
 
-###Important: This program requires sudo privileges to create sockets.
+### Important: This program requires sudo privileges to create sockets.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
