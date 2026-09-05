@@ -12,7 +12,7 @@
 
 NAME = ft_traceroute
 
-SRCS =	main.c dns.c libft_function.c parsing.c print.c utils.c
+SRCS =	main.c dns.c parsing.c print.c utils.c
 
 SRCS_DIR = srcs
 

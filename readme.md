@@ -42,6 +42,8 @@ traceroute 8.8.8.8 60.1 // ok
 traceroute -f 25 8.8.8.8 //ok
 traceroute 8.8.8.8 65001
 
+traceroute -m 50 -f 35 8.8.8.8
+
 work :
 traceroute 8.8.8.8
 traceroute 8.8.8.8 60

@@ -46,10 +46,7 @@ Bonus options :
 -f, --f			Start from the N hop (instead from 1)
 -q, --q			Set the number of probes per each hop. Default is 3
 -rdns, --rdns		Resolve IP addresses to their domain names
--z, --z			Minimal time interval between probes (default 0).
-			If the value is more than 10, then it specifies a
-			number in milliseconds, else it is a number of
-			seconds (float point values allowed too)
+-p, --p			Starting port
 
 Arguments:
 host			The host to traceroute to
@@ -163,21 +160,31 @@ run_error_tests() {
 
 clean_output(){
 
-    result=$1
+    local result="$1"
 
-    ip="[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}"
+    ip="[0-9]{1,3}\.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}"
     ipReplace="XXX.XXX.XXX.XXX"
 
-    ms="[0-9]{1,3}.[0-9]{1,3} ms"
+    ms="[0-9]{1,3}\.[0-9]{1,3} ms"
     msReplace="t.ttt ms"
+
+    space="[ ]{2}"
+    spaceReplace=" "
+
+    endSpace="[ ]$"
+    endSpaceReplace=""
     
     #Replace ip by "XXX.XXX.XXX.XXX"
-    #result=$(echo "$result" | sed -E "s/$ip/$ipReplace/g")
+    result=$(echo "$result" | sed -E "s/$ip/$ipReplace/g")
 
     #Replace ms by "t.ttt ms"
     result=$(echo "$result" | sed -E "s/$ms/$msReplace/g")
+
+    #Simplify and remove trailing spaces
+    result=$(echo "$result" | sed -E "s/$space/$spaceReplace/g")
+    result=$(echo "$result" | sed -E "s/$endSpace/$endSpaceReplace/g")
     
-    echo $result
+    echo "$result"
 }
 
 run_success_tests() {
@@ -188,7 +195,7 @@ run_success_tests() {
     do
         echo -e "================ Success Test $testCount ===================\n"
 
-        your=$(./ft_traceroute $i 2>&1)
+        your=$(./ft_traceroute -rdns $i 2>&1)
         linux=$(traceroute $i 2>&1)
         
         cleanedYour=$(clean_output "$your")

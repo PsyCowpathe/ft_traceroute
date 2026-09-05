@@ -24,10 +24,11 @@
 # include <arpa/inet.h>
 # include <sys/socket.h>
 # include <string.h>
-# include <errno.h> //todo : delete
+# include <errno.h>
 # include <sys/time.h>
 
 # define PORT 33434
+# define TIMEOUT {1, 0}
 
 
 /****************** LIMITS ******************/
@@ -56,17 +57,24 @@ Cannot handle \"host\" cmdline arg `%s'"
 # define HOPS_OUT_RANGE "first hop out of range"
 # define TOO_MUCH_PROBES "no more than 10 probes per hop"
 # define SOCKET_CREATION_ERROR "Can't create socket ! Internal error "
-# define HOST_UNREACHABLE "Destination Host Unreachable\n"
+# define HOST_UNREACHABLE "Destination Host Unreachable %u\n"
+# define MALLOC_ERROR "Malloc allocation failed !"
 
 
 /****************** SUCCESS ******************/
 
-# define PRINT_STEP "%d %s %LF ms TIME TIME\n"
+# define PRINT_START "traceroute to %s (%s), %d hops max, %d byte packets\n"
 
+typedef struct		s_probe_infos
+{
+	long double		probe_time;
+	char			ip_result[NI_MAXHOST];
+	char			dns[NI_MAXHOST];
+
+}					t_probe_infos;
 
 typedef struct s_parameters
 {
-    char				dns_name[NI_MAXHOST];
 	struct sockaddr_in	destination;
 	uint16_t			current_ttl;
 	bool				destination_reached;
@@ -75,6 +83,8 @@ typedef struct s_parameters
 	char				packet[MAX_PACKET_SIZE];
 	struct timeval		start;
 	struct timeval		end;
+	t_probe_infos		*probe_infos;
+	uint16_t					current_port;
 
     /******************  ARGUMENTS   ******************/
 
@@ -103,19 +113,17 @@ typedef struct s_parameters
 	char				*string_probes_per_hop;
 
 	// [-rdns] Resolve IP addresses to their domain names
-	bool					rdns;
+	bool				rdns;
 
-	// [-z] Minimal time interval between probes (default 0).
-    // If the value is more than 10, then it specifies a
-    // number in milliseconds, else it is a number of
-    // seconds (float point values allowed too)
-	double				probe_interval;
-	char				*string_probe_interval;
+	// [-p] Define starting port
+	uint16_t			starting_port;
+	char				*string_starting_port;
 }						t_parameters;
 
 /****************** print ******************/
-void	error_exit(int code, bool print_try, const char *msg, ...);
+void	error_exit(t_parameters *params, int code, bool print_try, const char *msg, ...);
 void	print_help_menu(void);
+void	print_one_hop(t_parameters *params);
 
 
 /****************** parsing ******************/
@@ -127,19 +135,15 @@ int	parse_args(char **args, int argc, t_parameters *params);
 
 void	dns_lookup(t_parameters *params);
 void	verify_target_address(t_parameters *params);
+void	reverse_dns_lookup(t_parameters *params, char *resut, char *ip);
 
 
 /****************** utils ******************/
 
 void	store_flag(t_parameters *params, char *flag_id, char *flag_value);
 void	init_flag_structure(t_parameters *params);
-
-
-/****************** libft_function ******************/
-
-size_t	ft_strlen(const char *s);
-void	ft_bzero(void *s, size_t n);
-char	*ft_strncpy(char *dest, char *src, unsigned int n);
-int     ft_strcmp(char *s1, char *s2);
+void	init_probes_saving(t_parameters *params);
+void	free_malloced_var(t_parameters *params);
+void	increment_port(t_parameters *params);
 
 #endif

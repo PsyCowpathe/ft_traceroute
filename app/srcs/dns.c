@@ -11,6 +11,8 @@
 /* ************************************************************************** */
 
 #include "../includes/ft_traceroute.h"
+#include <netdb.h>
+#include <stdio.h>
 
 //convert DNS en IP
 void	dns_lookup(t_parameters *params)
@@ -19,13 +21,13 @@ void	dns_lookup(t_parameters *params)
 	struct addrinfo	*result;
 	int				ret;
 
-	ft_bzero(&hints, sizeof(hints));
+	bzero(&hints, sizeof(hints));
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_RAW;
 	hints.ai_protocol = IPPROTO_ICMP;
 	ret = getaddrinfo(params->string_original_target, NULL, &hints, &result);
 	if (ret != 0)
-		error_exit(1, false, UNKNOW_HOST, params->string_original_target, gai_strerror(ret), params->string_original_target); //TODO : TESTER
+		error_exit(params,1, false, UNKNOW_HOST, params->string_original_target, gai_strerror(ret), params->string_original_target);
 	params->ip_address = (struct addrinfo *)result;
     snprintf(
     params->string_ip_address,
@@ -35,31 +37,32 @@ void	dns_lookup(t_parameters *params)
 }
 
 // convert IP en DNS
-void	reverse_dns_lookup(t_parameters *params)
+void	reverse_dns_lookup(t_parameters *params, char *result, char *ip)
 {
+
 	struct sockaddr_in	tmp_addr;
 	socklen_t			len;
 	int					ret;
 
 	tmp_addr.sin_family = AF_INET;
-	tmp_addr.sin_addr.s_addr = inet_addr(params->string_ip_address);
+	tmp_addr.sin_addr.s_addr = inet_addr(ip);
 	len = sizeof(struct sockaddr_in);
 	ret = getnameinfo((struct sockaddr *)&tmp_addr, len,
-			params->dns_name, sizeof(params->dns_name), NULL, 0,
+			result, NI_MAXHOST, NULL, 0,
 			NI_NAMEREQD);
-	if (ret == 0)
-		ft_strncpy(params->dns_name, params->string_ip_address, NI_MAXHOST);
-	else
-		error_exit(1, false, gai_strerror(ret)); //TODO : TESTER
-
+	if (ret == EAI_NONAME)
+	{
+		strncpy(result, ip, strlen(ip));
+	}
+	else if (ret != 0)
+	{
+		error_exit(params, 1, false, gai_strerror(ret));
+	}
 }
 
 void	verify_target_address(t_parameters *params)
 {
 	if (params->string_original_target == NULL)
-		error_exit(1, true, MISSING_HOST);
+		error_exit(params, 1, true, MISSING_HOST);
 	dns_lookup(params);
-	ft_strncpy(params->dns_name, params->string_original_target, NI_MAXHOST);
-	if (params->rdns == true)
-		reverse_dns_lookup(params);
 }

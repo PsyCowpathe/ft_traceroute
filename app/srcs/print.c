@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include "../includes/ft_traceroute.h"
+#include <stdio.h>
 
 void	print_help_menu(void)
 {
@@ -23,10 +24,7 @@ void	print_help_menu(void)
 	printf("-f, --f\t\t\tStart from the N hop (instead from 1)\n");
 	printf("-q, --q\t\t\tSet the number of probes per each hop. Default is 3\n");
 	printf("-rdns, --rdns\t\tResolve IP addresses to their domain names\n");
-	printf("-z, --z\t\t\tMinimal time interval between probes (default 0).\n");
-	printf("\t\t\tIf the value is more than 10, then it specifies a\n");
-	printf("\t\t\tnumber in milliseconds, else it is a number of\n");
-	printf("\t\t\tseconds (float point values allowed too)\n\n");
+	printf("-p, --p\t\t\tStarting port\n\n");
 	printf("Arguments:\n");
 	printf("host\t\t\tThe host to traceroute to\n");
 	printf("packetlen\t\tThe full packet length (default is the length of an IP\n");
@@ -35,8 +33,38 @@ void	print_help_menu(void)
 	exit(0);
 }
 
+void	print_one_hop(t_parameters *params)
+{
+	uint32_t		i;
+	char			last_ip[NI_MAXHOST];
 
-void	error_exit(int code, bool print_try, const char *msg, ...)
+	i = 0;
+	bzero(last_ip, NI_MAXHOST);
+	printf("%2d ", params->current_ttl);
+	while (i < params->probes_per_hop)
+	{
+		if (params->probe_infos[i].probe_time == -1)
+		{
+			printf("* ");
+		}
+		else
+		{
+			if (strcmp(last_ip, params->probe_infos[i].ip_result) == 0)
+			{
+				printf("%.3LF ms  ", params->probe_infos[i].probe_time);
+			}
+			else
+			{
+				printf("%s (%s) %.3LF ms  ", params->probe_infos[i].dns, params->probe_infos[i].ip_result, params->probe_infos[i].probe_time);
+			}
+			strncpy(last_ip, params->probe_infos[i].ip_result, strlen(params->probe_infos[i].ip_result));
+		}
+		i++;
+	}
+	printf("\n");
+}
+
+void	error_exit(t_parameters *params, int code, bool print_try, const char *msg, ...)
 {
 	va_list	args;
 	int		len;
@@ -58,5 +86,6 @@ void	error_exit(int code, bool print_try, const char *msg, ...)
 	else
 		printf(ERROR_PRINT, fmt_msg);
 	free(fmt_msg);
+	free_malloced_var(params);
 	exit(code);
 }
