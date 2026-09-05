@@ -1,12 +1,12 @@
-#ft_traceroute
+# ft_traceroute
 
 A clone of traceroute written in C.
 
-##Options
+## Options
 
     --help: Show the help menu.
 
-##Bonus options
+## Bonus options
 
     -m: Maximum TTL (default is 30)
     -f: Start from the Nth hop (default is 1)
@@ -14,7 +14,7 @@ A clone of traceroute written in C.
     -p: Starting port
     -rdns: Resolve IP addresses to domain names
 
-##Unit tests
+## Unit tests
 
 A unitTests.sh script is available to automatically compare the output with the official traceroute:
     sudo ./unitTests.sh
@@ -51,7 +51,7 @@ traceroute -q 255 8.8.8.8 //ok
 traceroute 8.8.8.8 -1 //ok
 traceroute 8.8.8.8 60.1 // ok
 traceroute -f 25 8.8.8.8 //ok
-traceroute 8.8.8.8 65001
+traceroute 8.8.8.8 65001 //ok
 
 traceroute -m 50 -f 35 8.8.8.8
 
