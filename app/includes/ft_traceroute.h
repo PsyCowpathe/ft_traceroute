@@ -59,6 +59,7 @@ Cannot handle \"host\" cmdline arg `%s'"
 # define SOCKET_CREATION_ERROR "Can't create socket ! Internal error "
 # define HOST_UNREACHABLE "Destination Host Unreachable %u\n"
 # define MALLOC_ERROR "Malloc allocation failed !"
+# define PACKET_TOO_BIG "too big packetlen %d specified"
 
 
 /****************** SUCCESS ******************/

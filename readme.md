@@ -1,14 +1,25 @@
-Option :
+#ft_traceroute
 
---help : show help menu
+A clone of traceroute written in C.
 
-Bonus possible :
+##Options
 
--m = ttl max (default = 30)
--f = Start from the N hop (instead from 1)
--q = nombre de probes (paquet) envoyé par TTL
--rdns = Résoudre l'ip addresse en nom de domaine
--z = temp entre deux probe (0 par défault)
+    --help: Show the help menu.
+
+##Bonus options
+
+    -m: Maximum TTL (default is 30)
+    -f: Start from the Nth hop (default is 1)
+    -q: Number of probes sent per TTL
+    -p: Starting port
+    -rdns: Resolve IP addresses to domain names
+
+##Unit tests
+
+A unitTests.sh script is available to automatically compare the output with the official traceroute:
+    sudo ./unitTests.sh
+
+###Important: This program requires sudo privileges to create sockets.
 
 
 
@@ -49,15 +60,3 @@ traceroute 8.8.8.8
 traceroute 8.8.8.8 60
 traceroute -f 5 8.8.8.8
 traceroute 8.8.8.8 65000
-
-
-
-
-./ft_traceroute "$TARGET" > actual.txt 2>&1
-traceroute "$TARGET" > expected.txt 2>&1
-
-if diff -u expected.txt actual.txt; then
-    echo "✅ Outputs identiques"
-else
-    echo "❌ Différences détectées"
-fi

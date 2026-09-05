@@ -157,6 +157,8 @@ int	parse_args(char **args, int argc, t_parameters *params)
 			params->string_packet_len = args[i];
 			verify_packet_len(params);
 			params->packet_len = atoi(params->string_packet_len);
+			if (params->packet_len > 65000)
+				error_exit(params, 1, false, PACKET_TOO_BIG, params->packet_len);
 		}
 		i++;
 	}
