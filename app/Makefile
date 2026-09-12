@@ -29,8 +29,6 @@ LIBFLAGS = -lm
 CFLAGS	= -Wall -Wextra -Werror -I $(INC)
 
 all: $(NAME)
-	./unitTests.sh
-
 
 $(NAME) :	$(OBJS_PATH)
 			gcc $(CFLAGS) $(OBJS_PATH) $(LIBFLAGS) -o $(NAME)

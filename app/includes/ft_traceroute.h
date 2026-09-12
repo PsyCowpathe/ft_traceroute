@@ -53,13 +53,13 @@ Cannot handle \"host\" cmdline arg `%s'"
 # define UNRECOGNIZED "%s: Name or service not known\n\
 Cannot handle \"host\" cmdline arg `%s'"
 # define INVALID_PACKETLEN "Cannot handle \"packetlen\" cmdline arg `%s'"
-# define HOPS_TOO_BIG "max hops cannot be more than 255"
-# define HOPS_OUT_RANGE "first hop out of range"
-# define TOO_MUCH_PROBES "no more than 10 probes per hop"
-# define SOCKET_CREATION_ERROR "Can't create socket ! Internal error "
+# define HOPS_TOO_BIG "Max hops cannot be more than 255"
+# define HOPS_OUT_RANGE "First hop out of range"
+# define TOO_MUCH_PROBES "No more than 10 probes per hop"
+# define SOCKET_CREATION_ERROR "Can't create socket, you must be root ! Internal error "
 # define HOST_UNREACHABLE "Destination Host Unreachable %u\n"
 # define MALLOC_ERROR "Malloc allocation failed !"
-# define PACKET_TOO_BIG "too big packetlen %d specified"
+# define PACKET_TOO_BIG "Too big packetlen %d specified"
 
 
 /****************** SUCCESS ******************/

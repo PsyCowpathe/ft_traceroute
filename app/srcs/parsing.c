@@ -80,7 +80,7 @@ int	verify_flag_limits(t_parameters *params)
 {
 	if (params->ttl_max > MAX_HOPS)
 		error_exit(params, 1, false, HOPS_TOO_BIG);
-	if (params->hop_start > params->ttl_max)
+	if (params->hop_start == 0 || params->hop_start > params->ttl_max)
 		error_exit(params, 1, false, HOPS_OUT_RANGE);
 	if (params->probes_per_hop > MAX_PROBES)
 		error_exit(params, 1, false, TOO_MUCH_PROBES);

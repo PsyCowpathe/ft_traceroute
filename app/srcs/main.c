@@ -79,7 +79,6 @@ int		create_socket(char *socket_type)
 	}
 	if (socketmp < 0)
 	{
-		printf("socket type = %s", socket_type);
 		perror(SOCKET_CREATION_ERROR);
 		exit(1);
 	}

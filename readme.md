@@ -14,9 +14,4 @@ A clone of traceroute written in C.
     -p: Starting port
     -rdns: Resolve IP addresses to domain names
 
-## Unit tests
-
-A unitTests.sh script is available to automatically compare the output with the official traceroute:
-    sudo ./unitTests.sh
-
 ### Important: This program requires sudo privileges to create sockets.
